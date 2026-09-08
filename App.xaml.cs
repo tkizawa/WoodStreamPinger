@@ -25,6 +25,7 @@ using WoodStreamPinger.Services;
 public partial class App : Application
 {
     private Window? _window;
+    public static Window? MainWindowInstance { get; private set; }
 
     public static ISettingsService SettingsService { get; } = new SettingsService();
     public static IPingService PingService { get; } = new PingService();
@@ -47,6 +48,7 @@ public partial class App : Application
         LocalizationService.SetLanguage(settings.Language);
 
         _window = new MainWindow();
+        MainWindowInstance = _window;
         _window.Activate();
     }
 }

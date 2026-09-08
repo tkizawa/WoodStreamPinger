@@ -86,6 +86,14 @@
                             <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Toolbar_AddHost'), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
+
+                    <!-- CSV出力 -->
+                    <Button Click="OnExportCsvClicked">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xEDE1;" FontSize="14" />
+                            <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Toolbar_ExportCsv'), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- 右側: テーマ & 言語切り替え -->

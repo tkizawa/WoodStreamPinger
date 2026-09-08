@@ -42,8 +42,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Toolbar_StopAll"] = "すべて停止",
         ["Toolbar_ResetStats"] = "統計リセット",
         ["Toolbar_AddHost"] = "ホスト追加",
+        ["Toolbar_ExportCsv"] = "CSV出力",
         ["Toolbar_Settings"] = "設定",
         ["Toolbar_SearchPlaceholder"] = "ホスト名またはIPで絞り込み...",
+
+        // CSVエクスポート
+        ["Export_Success_Title"] = "エクスポート完了",
+        ["Export_Success_Message"] = "統計結果をCSVファイルに出力しました:\n{0}",
+        ["Export_NoData"] = "出力対象のホストがありません。",
 
         // パラメータ
         ["Param_Title"] = "Ping パラメータ設定",
@@ -123,8 +129,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Toolbar_StopAll"] = "Stop All",
         ["Toolbar_ResetStats"] = "Reset Stats",
         ["Toolbar_AddHost"] = "Add Hosts",
+        ["Toolbar_ExportCsv"] = "Export CSV",
         ["Toolbar_Settings"] = "Settings",
         ["Toolbar_SearchPlaceholder"] = "Filter by host or IP...",
+
+        // CSV Export
+        ["Export_Success_Title"] = "Export Completed",
+        ["Export_Success_Message"] = "Statistics exported to CSV file:\n{0}",
+        ["Export_NoData"] = "No hosts to export.",
 
         // Parameters
         ["Param_Title"] = "Ping Parameters",

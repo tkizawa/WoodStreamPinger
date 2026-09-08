@@ -280,6 +280,33 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SaveHostsToSettings();
     }
 
+    /// <summary>
+    /// 現在の全ホスト統計結果を CSV ファイルとして出力（BOM付きUTF-8）
+    /// </summary>
+    public async Task ExportCsvAsync(string filePath)
+    {
+        var sb = new System.Text.StringBuilder();
+        // CSV ヘッダー行
+        sb.AppendLine("Host,Resolved IP,Status,Last RTT (ms),Sent,Received,Lost,Loss Rate (%),Min RTT (ms),Max RTT (ms),Avg RTT (ms)");
+
+        foreach (var t in Targets)
+        {
+            var hostEscaped = $"\"{t.Host.Replace("\"", "\"\"")}\"";
+            var ip = $"\"{t.ResolvedIp.Replace("\"", "\"\"")}\"";
+            var status = $"\"{t.StatusText.Replace("\"", "\"\"")}\"";
+            var lastRtt = t.Status == HostPingStatus.Success ? t.LastRttMs.ToString() : "-";
+            var minRtt = t.MinRttMs >= 0 ? t.MinRttMs.ToString() : "-";
+            var maxRtt = t.MaxRttMs >= 0 ? t.MaxRttMs.ToString() : "-";
+            var avgRtt = t.ReceivedCount > 0 ? t.AvgRttMs.ToString(System.Globalization.CultureInfo.InvariantCulture) : "-";
+
+            sb.AppendLine($"{hostEscaped},{ip},{status},{lastRtt},{t.SentCount},{t.ReceivedCount},{t.LostCount},{t.LossRate}%,{minRtt},{maxRtt},{avgRtt}");
+        }
+
+        // Excel等での文字化けを防ぐため BOM 付き UTF-8 で出力
+        var encoding = new System.Text.UTF8Encoding(true);
+        await File.WriteAllTextAsync(filePath, sb.ToString(), encoding);
+    }
+
     // --- 内部ヘルパーロジック ---
 
     private void StartPingForTarget(HostPingTarget target)

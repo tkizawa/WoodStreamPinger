@@ -140,4 +140,67 @@ public sealed partial class MainPage : Page
             ViewModel.RemoveTarget(target);
         }
     }
+
+    /// <summary>
+    /// 統計結果の CSV エクスポート処理
+    /// </summary>
+    private async void OnExportCsvClicked(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.Targets.Count == 0)
+        {
+            var noDataDialog = new ContentDialog
+            {
+                XamlRoot = this.XamlRoot,
+                Title = ViewModel.Loc.GetString("Toolbar_ExportCsv"),
+                Content = ViewModel.Loc.GetString("Export_NoData"),
+                CloseButtonText = ViewModel.Loc.GetString("Dialog_Close")
+            };
+            await noDataDialog.ShowAsync();
+            return;
+        }
+
+        try
+        {
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker
+            {
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = $"WoodStreamPinger_Stats_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+            };
+            savePicker.FileTypeChoices.Add("CSV (カンマ区切り) (*.csv)", new List<string> { ".csv" });
+
+            // WinUI 3 デスクトップアプリ用 HWND 初期化
+            var window = App.MainWindowInstance;
+            if (window != null)
+            {
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+            }
+
+            var file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                await ViewModel.ExportCsvAsync(file.Path);
+
+                var successDialog = new ContentDialog
+                {
+                    XamlRoot = this.XamlRoot,
+                    Title = ViewModel.Loc.GetString("Export_Success_Title"),
+                    Content = string.Format(ViewModel.Loc.GetString("Export_Success_Message"), file.Path),
+                    CloseButtonText = ViewModel.Loc.GetString("Dialog_Close")
+                };
+                await successDialog.ShowAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ContentDialog
+            {
+                XamlRoot = this.XamlRoot,
+                Title = "Error",
+                Content = ex.Message,
+                CloseButtonText = ViewModel.Loc.GetString("Dialog_Close")
+            };
+            await errorDialog.ShowAsync();
+        }
+    }
 }
