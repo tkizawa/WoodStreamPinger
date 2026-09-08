@@ -1,0 +1,401 @@
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Dispatching;
+using WoodStreamPinger.Models;
+using WoodStreamPinger.Services;
+
+namespace WoodStreamPinger.ViewModels;
+
+/// <summary>
+/// メインウィンドウ・画面全体の ViewModel
+/// </summary>
+public sealed partial class MainViewModel : ObservableObject, IDisposable
+{
+    private readonly IPingService _pingService;
+    private readonly ISettingsService _settingsService;
+    private readonly LocalizationService _loc = LocalizationService.Instance;
+    private readonly DispatcherQueue _dispatcherQueue;
+
+    private readonly ConcurrentDictionary<HostPingTarget, CancellationTokenSource> _runningTasks = new();
+    private bool _isDisposed;
+
+    // --- 公開プロパティ ---
+
+    public LocalizationService Loc => _loc;
+
+    [ObservableProperty]
+    public partial PingParameters Parameters { get; set; } = new();
+
+    /// <summary>
+    /// 登録されている全ホスト
+    /// </summary>
+    public ObservableCollection<HostPingTarget> Targets { get; } = [];
+
+    [ObservableProperty]
+    public partial HostPingTarget? SelectedTarget { get; set; }
+
+    [ObservableProperty]
+    public partial string SearchText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsAnyRunning { get; set; }
+
+    [ObservableProperty]
+    public partial string NewHostInput { get; set; } = string.Empty;
+
+    // --- サマリー統計プロパティ ---
+
+    [ObservableProperty]
+    public partial int TotalHostsCount { get; set; }
+
+    [ObservableProperty]
+    public partial int ActiveHostsCount { get; set; }
+
+    [ObservableProperty]
+    public partial int TotalSent { get; set; }
+
+    [ObservableProperty]
+    public partial int TotalReceived { get; set; }
+
+    [ObservableProperty]
+    public partial int TotalLost { get; set; }
+
+    [ObservableProperty]
+    public partial double OverallLossRate { get; set; }
+
+    [ObservableProperty]
+    public partial double OverallAvgRtt { get; set; }
+
+    // --- 表示用フォーマット済みプロパティ ---
+    public string OverallLossRateDisplay => $"{OverallLossRate}%";
+    public string OverallAvgRttDisplay => $"{OverallAvgRtt} ms";
+
+    // --- NumberBox バインディング用 double プロパティ ---
+    public double TimeoutMs
+    {
+        get => Parameters.TimeoutMs;
+        set { Parameters.TimeoutMs = (int)Math.Round(value); OnPropertyChanged(); }
+    }
+    public double IntervalMs
+    {
+        get => Parameters.IntervalMs;
+        set { Parameters.IntervalMs = (int)Math.Round(value); OnPropertyChanged(); }
+    }
+    public double BufferSize
+    {
+        get => Parameters.BufferSize;
+        set { Parameters.BufferSize = (int)Math.Round(value); OnPropertyChanged(); }
+    }
+    public double Ttl
+    {
+        get => Parameters.Ttl;
+        set { Parameters.Ttl = (int)Math.Round(value); OnPropertyChanged(); }
+    }
+    public double Count
+    {
+        get => Parameters.Count;
+        set { Parameters.Count = (int)Math.Round(value); OnPropertyChanged(); }
+    }
+
+    public MainViewModel(
+        IPingService pingService,
+        ISettingsService settingsService,
+        DispatcherQueue dispatcherQueue)
+    {
+        _pingService = pingService;
+        _settingsService = settingsService;
+        _dispatcherQueue = dispatcherQueue;
+
+        // 設定の初期ロード
+        LoadInitialSettings();
+    }
+
+    private void LoadInitialSettings()
+    {
+        var settings = _settingsService.CurrentSettings;
+        Parameters = settings.Parameters.Clone();
+
+        Targets.Clear();
+        foreach (var host in settings.SavedHosts)
+        {
+            if (!string.IsNullOrWhiteSpace(host))
+            {
+                Targets.Add(new HostPingTarget(host));
+            }
+        }
+
+        UpdateSummaryStats();
+    }
+
+    // --- コマンド実装 ---
+
+    /// <summary>
+    /// 全ホストに対する Ping を開始
+    /// </summary>
+    [RelayCommand]
+    public void StartAll()
+    {
+        foreach (var target in Targets.Where(t => t.IsEnabled))
+        {
+            StartPingForTarget(target);
+        }
+        UpdateRunningState();
+    }
+
+    /// <summary>
+    /// 全ホストに対する Ping を停止
+    /// </summary>
+    [RelayCommand]
+    public void StopAll()
+    {
+        foreach (var kvp in _runningTasks)
+        {
+            try
+            {
+                kvp.Value.Cancel();
+                kvp.Value.Dispose();
+            }
+            catch { }
+        }
+        _runningTasks.Clear();
+
+        foreach (var target in Targets)
+        {
+            if (target.Status == HostPingStatus.Running)
+            {
+                target.Status = HostPingStatus.Idle;
+                target.StatusText = "Stopped";
+            }
+        }
+
+        UpdateRunningState();
+    }
+
+    /// <summary>
+    /// 個別ホストに対する Ping 開始
+    /// </summary>
+    [RelayCommand]
+    public void StartTarget(HostPingTarget? target)
+    {
+        if (target == null) return;
+        StartPingForTarget(target);
+        UpdateRunningState();
+    }
+
+    /// <summary>
+    /// 個別ホストに対する Ping 停止
+    /// </summary>
+    [RelayCommand]
+    public void StopTarget(HostPingTarget? target)
+    {
+        if (target == null) return;
+        if (_runningTasks.TryRemove(target, out var cts))
+        {
+            try
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+            catch { }
+        }
+
+        if (target.Status == HostPingStatus.Running)
+        {
+            target.Status = HostPingStatus.Idle;
+            target.StatusText = "Stopped";
+        }
+        UpdateRunningState();
+    }
+
+    /// <summary>
+    /// 入力されたホスト（改行またはカンマ区切りで複数可）を追加
+    /// </summary>
+    [RelayCommand]
+    public void AddHosts(string? input)
+    {
+        var text = string.IsNullOrWhiteSpace(input) ? NewHostInput : input;
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var entries = text.Split(new[] { '\r', '\n', ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                          .Select(s => s.Trim())
+                          .Where(s => !string.IsNullOrWhiteSpace(s))
+                          .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        bool added = false;
+        foreach (var entry in entries)
+        {
+            if (!Targets.Any(t => string.Equals(t.Host, entry, StringComparison.OrdinalIgnoreCase)))
+            {
+                Targets.Add(new HostPingTarget(entry));
+                added = true;
+            }
+        }
+
+        if (added)
+        {
+            NewHostInput = string.Empty;
+            UpdateSummaryStats();
+            SaveHostsToSettings();
+        }
+    }
+
+    /// <summary>
+    /// ホストをリストから削除
+    /// </summary>
+    [RelayCommand]
+    public void RemoveTarget(HostPingTarget? target)
+    {
+        if (target == null) return;
+
+        StopTarget(target);
+        Targets.Remove(target);
+        UpdateSummaryStats();
+        SaveHostsToSettings();
+    }
+
+    /// <summary>
+    /// 全ホストの統計をリセット
+    /// </summary>
+    [RelayCommand]
+    public void ResetStats()
+    {
+        foreach (var target in Targets)
+        {
+            target.ResetStats();
+        }
+        UpdateSummaryStats();
+    }
+
+    /// <summary>
+    /// 全ホストリストをクリア
+    /// </summary>
+    [RelayCommand]
+    public void ClearAllTargets()
+    {
+        StopAll();
+        Targets.Clear();
+        UpdateSummaryStats();
+        SaveHostsToSettings();
+    }
+
+    // --- 内部ヘルパーロジック ---
+
+    private void StartPingForTarget(HostPingTarget target)
+    {
+        // 既に実行中なら停止してから再開
+        if (_runningTasks.TryRemove(target, out var oldCts))
+        {
+            try
+            {
+                oldCts.Cancel();
+                oldCts.Dispose();
+            }
+            catch { }
+        }
+
+        var cts = new CancellationTokenSource();
+        _runningTasks[target] = cts;
+        target.SetRunning();
+
+        var paramCopy = Parameters.Clone();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _pingService.RunPingLoopAsync(
+                    target,
+                    paramCopy,
+                    (t, result, resolvedIp) =>
+                    {
+                        // UI スレッド上でモデル・プロパティを更新
+                        _dispatcherQueue.TryEnqueue(() =>
+                        {
+                            t.UpdateWithResult(result, resolvedIp);
+                            UpdateSummaryStats();
+                        });
+                    },
+                    cts.Token);
+            }
+            finally
+            {
+                _runningTasks.TryRemove(target, out _);
+                _dispatcherQueue.TryEnqueue(() =>
+                {
+                    if (target.Status == HostPingStatus.Running)
+                    {
+                        target.Status = HostPingStatus.Idle;
+                        target.StatusText = "Finished";
+                    }
+                    UpdateRunningState();
+                    UpdateSummaryStats();
+                });
+            }
+        }, cts.Token);
+    }
+
+    private void UpdateRunningState()
+    {
+        IsAnyRunning = !_runningTasks.IsEmpty;
+        ActiveHostsCount = _runningTasks.Count;
+    }
+
+    private void UpdateSummaryStats()
+    {
+        TotalHostsCount = Targets.Count;
+        ActiveHostsCount = _runningTasks.Count;
+
+        int sent = 0;
+        int received = 0;
+        int lost = 0;
+        double sumAvgRtt = 0;
+        int hostsWithReplies = 0;
+
+        foreach (var t in Targets)
+        {
+            sent += t.SentCount;
+            received += t.ReceivedCount;
+            lost += t.LostCount;
+
+            if (t.ReceivedCount > 0)
+            {
+                sumAvgRtt += t.AvgRttMs;
+                hostsWithReplies++;
+            }
+        }
+
+        TotalSent = sent;
+        TotalReceived = received;
+        TotalLost = lost;
+
+        OverallLossRate = sent > 0
+            ? Math.Round((double)lost / sent * 100.0, 1)
+            : 0.0;
+
+        OverallAvgRtt = hostsWithReplies > 0
+            ? Math.Round(sumAvgRtt / hostsWithReplies, 1)
+            : 0.0;
+
+        OnPropertyChanged(nameof(OverallLossRateDisplay));
+        OnPropertyChanged(nameof(OverallAvgRttDisplay));
+    }
+
+    private void SaveHostsToSettings()
+    {
+        var settings = _settingsService.CurrentSettings;
+        settings.SavedHosts = Targets.Select(t => t.Host).ToList();
+        settings.Parameters = Parameters.Clone();
+        _ = _settingsService.SaveSettingsAsync(settings);
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed) return;
+        _isDisposed = true;
+
+        StopAll();
+        SaveHostsToSettings();
+    }
+}

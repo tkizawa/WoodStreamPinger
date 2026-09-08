@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WoodStreamPinger (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "WoodStreamPinger (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
