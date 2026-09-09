@@ -13,7 +13,7 @@ if (-not $ScriptRoot) {
     $ScriptRoot = (Get-Location).Path
 }
 
-# 1. ターゲットアーキテクチャの決定
+# 1. Target architecture
 $targets = @()
 if ([string]::IsNullOrWhiteSpace($Architecture) -or $Architecture -eq "all") {
     $targets = @("x64", "arm64")
@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($Architecture) -or $Architecture -eq "all") {
     $targets = @($Architecture)
 }
 
-# 2. csproj からバージョン取得
+# 2. Get version from csproj
 $csprojPath = Join-Path $ScriptRoot "WoodStreamPinger.csproj"
 [xml]$csprojXml = Get-Content -Path $csprojPath -Raw -Encoding UTF8
 $version = $csprojXml.Project.PropertyGroup.Version
@@ -43,13 +43,13 @@ Write-Host " Version:       $version" -ForegroundColor Cyan
 Write-Host " Target Arch:   $($targets -join ', ')" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-# 3. 出力先ディレクトリ: .\Installer
+# 3. Output directory: .\Installer
 $installerDir = Join-Path $ScriptRoot "Installer"
 if (-not (Test-Path -Path $installerDir)) {
     New-Item -ItemType Directory -Path $installerDir -Force | Out-Null
 }
 
-# 4. Inno Setup コンパイラの検出
+# 4. Inno Setup Compiler detection
 $isccCandidates = @(
     "C:\Users\tomok\AppData\Local\Programs\Inno Setup 6\ISCC.exe",
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
@@ -66,19 +66,23 @@ foreach ($cand in $isccCandidates) {
 }
 
 if (-not $isccPath) {
-    Write-Error "Inno Setup Compiler (ISCC.exe) が見つかりませんでした。"
+    Write-Error "Inno Setup Compiler (ISCC.exe) not found."
     exit 1
 }
 Write-Host "Using Inno Setup: $isccPath" -ForegroundColor Gray
 
 $createdArtifacts = @()
 
-# 5. 各アーキテクチャのビルド & インストーラ作成
+# 5. Build & package for each target
 foreach ($arch in $targets) {
     $rid = "win-$arch"
-    Write-Host "`n>>> Processing Target: $arch ($rid) <<<" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "--- Processing Target: $arch ($rid) ---" -ForegroundColor Yellow
 
     $publishDir = Join-Path $ScriptRoot "bin\Release\net10.0-windows10.0.26100.0\$rid\publish"
+    if (Test-Path -Path $publishDir) {
+        Remove-Item -Path $publishDir -Recurse -Force
+    }
     
     Write-Host "Publishing self-contained release for $rid..." -ForegroundColor Cyan
     dotnet publish "$csprojPath" -c Release -r "$rid" --self-contained true -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -o "$publishDir"
@@ -102,12 +106,14 @@ foreach ($arch in $targets) {
     }
 }
 
-Write-Host "`n==========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "==========================================" -ForegroundColor Green
 Write-Host " Installer Packaging Completed!" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 foreach ($item in $createdArtifacts) {
     $sizeMB = [math]::Round($item.Length / 1MB, 2)
     Write-Host "File: $($item.Name)" -ForegroundColor Green
     Write-Host "Path: $($item.FullName)" -ForegroundColor Green
-    Write-Host "Size: $sizeMB MB`n" -ForegroundColor Green
+    Write-Host "Size: $sizeMB MB" -ForegroundColor Green
+    Write-Host ""
 }

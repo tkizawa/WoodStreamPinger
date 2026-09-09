@@ -33,6 +33,39 @@ public partial class App : Application
 
     public App()
     {
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "WoodStreamPinger", "crash.log");
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+                System.IO.File.WriteAllText(logPath, $"AppDomain UnhandledException:\n{e.ExceptionObject}");
+            }
+            catch { }
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "WoodStreamPinger", "crash.log");
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+                System.IO.File.WriteAllText(logPath, $"TaskScheduler UnobservedTaskException:\n{e.Exception}");
+            }
+            catch { }
+        };
+
+        UnhandledException += (s, e) =>
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "WoodStreamPinger", "crash.log");
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+                System.IO.File.WriteAllText(logPath, $"Xaml UnhandledException:\n{e.Message}\n{e.Exception}\nStackTrace:\n{e.Exception?.StackTrace}");
+            }
+            catch { }
+        };
+
         InitializeComponent();
     }
 
@@ -41,14 +74,28 @@ public partial class App : Application
     /// </summary>
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // 設定の読み込み
-        var settings = await SettingsService.LoadSettingsAsync();
+        try
+        {
+            // 設定の読み込み
+            var settings = await SettingsService.LoadSettingsAsync();
 
-        // 言語設定の適用
-        LocalizationService.SetLanguage(settings.Language);
+            // 言語設定の適用
+            LocalizationService.SetLanguage(settings.Language);
 
-        _window = new MainWindow();
-        MainWindowInstance = _window;
-        _window.Activate();
+            _window = new MainWindow();
+            MainWindowInstance = _window;
+            _window.Activate();
+        }
+        catch (System.Exception ex)
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "WoodStreamPinger", "crash.log");
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+                System.IO.File.WriteAllText(logPath, $"OnLaunched Exception:\n{ex.Message}\n{ex}\nStackTrace:\n{ex.StackTrace}");
+            }
+            catch { }
+            throw;
+        }
     }
 }

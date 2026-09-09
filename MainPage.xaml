@@ -96,26 +96,48 @@
                     </Button>
                 </StackPanel>
 
-                <!-- 右側: テーマ & 言語切り替え -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <!-- テーマ切り替え -->
-                    <ComboBox x:Name="ThemeComboBox"
-                              SelectionChanged="OnThemeSelectionChanged"
-                              MinWidth="120" VerticalAlignment="Center">
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_System'), Mode=OneWay}" Tag="System" />
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_Light'), Mode=OneWay}" Tag="Light" />
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_Dark'), Mode=OneWay}" Tag="Dark" />
-                    </ComboBox>
+                <!-- 右側: 設定ボタン (展開メニュー) -->
+                <Button Grid.Column="3" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE713;" FontSize="14" />
+                        <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Toolbar_Settings'), Mode=OneWay}" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <StackPanel Spacing="16" Width="260" Padding="4">
+                                <!-- タイトル -->
+                                <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Settings_Title'), Mode=OneWay}"
+                                           FontWeight="SemiBold" FontSize="14" />
 
-                    <!-- 言語切り替え -->
-                    <ComboBox x:Name="LanguageComboBox"
-                              SelectionChanged="OnLanguageSelectionChanged"
-                              MinWidth="110" VerticalAlignment="Center">
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_Auto'), Mode=OneWay}" Tag="Auto" />
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_Ja'), Mode=OneWay}" Tag="ja-JP" />
-                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_En'), Mode=OneWay}" Tag="en-US" />
-                    </ComboBox>
-                </StackPanel>
+                                <!-- テーマ設定 -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Settings_Theme'), Mode=OneWay}"
+                                               FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <ComboBox x:Name="ThemeComboBox"
+                                              SelectionChanged="OnThemeSelectionChanged"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_System'), Mode=OneWay}" Tag="System" />
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_Light'), Mode=OneWay}" Tag="Light" />
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Theme_Dark'), Mode=OneWay}" Tag="Dark" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- 言語設定 -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Settings_Language'), Mode=OneWay}"
+                                               FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <ComboBox x:Name="LanguageComboBox"
+                                              SelectionChanged="OnLanguageSelectionChanged"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_Auto'), Mode=OneWay}" Tag="Auto" />
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_Ja'), Mode=OneWay}" Tag="ja-JP" />
+                                        <ComboBoxItem Content="{x:Bind ViewModel.Loc.GetString('Settings_Language_En'), Mode=OneWay}" Tag="en-US" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
             </Grid>
         </Border>
 

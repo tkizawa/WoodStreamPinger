@@ -27,27 +27,44 @@ public sealed partial class MainPage : Page
         Loaded += OnLoaded;
     }
 
+    private bool _isLoaded = false;
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // 保存されていたテーマの適用
-        var settings = App.SettingsService.CurrentSettings;
-        WindowHelper.ApplyTheme(this, settings.Theme);
-
-        // テーマ選択UIの初期選択
-        ThemeComboBox.SelectedIndex = settings.Theme switch
+        try
         {
-            "Light" => 1,
-            "Dark" => 2,
-            _ => 0 // System
-        };
+            // 保存されていたテーマの適用
+            var settings = App.SettingsService.CurrentSettings;
+            WindowHelper.ApplyTheme(this, settings.Theme);
 
-        // 言語選択UIの初期選択
-        LanguageComboBox.SelectedIndex = settings.Language switch
+            // テーマ選択UIの初期選択
+            if (ThemeComboBox != null)
+            {
+                ThemeComboBox.SelectedIndex = settings.Theme switch
+                {
+                    "Light" => 1,
+                    "Dark" => 2,
+                    _ => 0 // System
+                };
+            }
+
+            // 言語選択UIの初期選択
+            if (LanguageComboBox != null)
+            {
+                LanguageComboBox.SelectedIndex = settings.Language switch
+                {
+                    "ja-JP" => 1,
+                    "en-US" => 2,
+                    _ => 0 // Auto
+                };
+            }
+
+            _isLoaded = true;
+        }
+        catch (System.Exception)
         {
-            "ja-JP" => 1,
-            "en-US" => 2,
-            _ => 0 // Auto
-        };
+            throw;
+        }
     }
 
     /// <summary>
@@ -55,7 +72,9 @@ public sealed partial class MainPage : Page
     /// </summary>
     private void OnThemeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ThemeComboBox.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        if (!_isLoaded) return;
+        var cb = sender as ComboBox ?? ThemeComboBox;
+        if (cb?.SelectedItem is ComboBoxItem item && item.Tag is string tag)
         {
             WindowHelper.ApplyTheme(this, tag);
 
@@ -70,7 +89,9 @@ public sealed partial class MainPage : Page
     /// </summary>
     private void OnLanguageSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (LanguageComboBox.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+        if (!_isLoaded) return;
+        var cb = sender as ComboBox ?? LanguageComboBox;
+        if (cb?.SelectedItem is ComboBoxItem item && item.Tag is string tag)
         {
             ViewModel.Loc.SetLanguage(tag);
 
