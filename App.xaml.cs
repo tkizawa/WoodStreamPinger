@@ -29,6 +29,7 @@ public partial class App : Application
 
     public static ISettingsService SettingsService { get; } = new SettingsService();
     public static IPingService PingService { get; } = new PingService();
+    public static IPingLogService PingLogService { get; } = new PingLogService();
     public static LocalizationService LocalizationService => LocalizationService.Instance;
 
     public App()

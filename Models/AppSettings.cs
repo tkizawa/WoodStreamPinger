@@ -29,4 +29,8 @@ public sealed class AppSettings
 
     // 言語設定 ("Auto", "ja-JP", "en-US")
     public string Language { get; set; } = "Auto";
+
+    // Ping 実行ログ（CSV）設定
+    public bool EnablePingLogging { get; set; } = false;
+    public string LogDirectory { get; set; } = string.Empty;
 }

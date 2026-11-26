@@ -14,11 +14,13 @@ namespace WoodStreamPinger.ViewModels;
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IPingService _pingService;
+    private readonly IPingLogService _pingLogService;
     private readonly ISettingsService _settingsService;
     private readonly LocalizationService _loc = LocalizationService.Instance;
     private readonly DispatcherQueue _dispatcherQueue;
 
     private readonly ConcurrentDictionary<HostPingTarget, CancellationTokenSource> _runningTasks = new();
+    private bool _isInitializing;
     private bool _isDisposed;
 
     // --- 公開プロパティ ---
@@ -44,6 +46,31 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     public partial string NewHostInput { get; set; } = string.Empty;
+
+    // --- Ping 実行ログ (CSV) 設定プロパティ ---
+
+    [ObservableProperty]
+    public partial bool EnablePingLogging { get; set; }
+
+    [ObservableProperty]
+    public partial string LogDirectory { get; set; } = string.Empty;
+
+    partial void OnEnablePingLoggingChanged(bool value)
+    {
+        if (_isInitializing) return;
+        SaveLogSettings();
+    }
+
+    partial void OnLogDirectoryChanged(string value)
+    {
+        if (_isInitializing) return;
+        SaveLogSettings();
+    }
+
+    /// <summary>
+    /// 実際に使用されるログ保存先フォルダパスを取得
+    /// </summary>
+    public string GetResolvedLogDirectory() => _pingLogService.ResolveLogDirectory(LogDirectory);
 
     // --- サマリー統計プロパティ ---
 
@@ -101,10 +128,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public MainViewModel(
         IPingService pingService,
+        IPingLogService pingLogService,
         ISettingsService settingsService,
         DispatcherQueue dispatcherQueue)
     {
         _pingService = pingService;
+        _pingLogService = pingLogService;
         _settingsService = settingsService;
         _dispatcherQueue = dispatcherQueue;
 
@@ -114,19 +143,29 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void LoadInitialSettings()
     {
-        var settings = _settingsService.CurrentSettings;
-        Parameters = settings.Parameters.Clone();
-
-        Targets.Clear();
-        foreach (var host in settings.SavedHosts)
+        _isInitializing = true;
+        try
         {
-            if (!string.IsNullOrWhiteSpace(host))
-            {
-                Targets.Add(new HostPingTarget(host));
-            }
-        }
+            var settings = _settingsService.CurrentSettings;
+            Parameters = settings.Parameters.Clone();
+            EnablePingLogging = settings.EnablePingLogging;
+            LogDirectory = _pingLogService.ResolveLogDirectory(settings.LogDirectory);
 
-        UpdateSummaryStats();
+            Targets.Clear();
+            foreach (var host in settings.SavedHosts)
+            {
+                if (!string.IsNullOrWhiteSpace(host))
+                {
+                    Targets.Add(new HostPingTarget(host));
+                }
+            }
+
+            UpdateSummaryStats();
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
     }
 
     // --- コマンド実装 ---
@@ -337,6 +376,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     paramCopy,
                     (t, result, resolvedIp) =>
                     {
+                        // Ping 実行ログ記録が有効な場合、バックグラウンドスレッドで CSV に 1 行追記
+                        if (EnablePingLogging)
+                        {
+                            _pingLogService.WriteEntry(
+                                t.Host,
+                                result,
+                                LogDirectory,
+                                _loc.GetString("Log_CsvHeader"));
+                        }
+
                         // UI スレッド上でモデル・プロパティを更新
                         _dispatcherQueue.TryEnqueue(() =>
                         {
@@ -414,6 +463,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var settings = _settingsService.CurrentSettings;
         settings.SavedHosts = Targets.Select(t => t.Host).ToList();
         settings.Parameters = Parameters.Clone();
+        settings.EnablePingLogging = EnablePingLogging;
+        settings.LogDirectory = LogDirectory;
+        _ = _settingsService.SaveSettingsAsync(settings);
+    }
+
+    private void SaveLogSettings()
+    {
+        var settings = _settingsService.CurrentSettings;
+        settings.EnablePingLogging = EnablePingLogging;
+        settings.LogDirectory = LogDirectory;
         _ = _settingsService.SaveSettingsAsync(settings);
     }
 

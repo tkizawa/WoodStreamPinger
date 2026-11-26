@@ -19,6 +19,7 @@ public sealed partial class MainPage : Page
 
         ViewModel = new MainViewModel(
             App.PingService,
+            App.PingLogService,
             App.SettingsService,
             DispatcherQueue);
 
@@ -211,6 +212,77 @@ public sealed partial class MainPage : Page
                 };
                 await successDialog.ShowAsync();
             }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ContentDialog
+            {
+                XamlRoot = this.XamlRoot,
+                Title = "Error",
+                Content = ex.Message,
+                CloseButtonText = ViewModel.Loc.GetString("Dialog_Close")
+            };
+            await errorDialog.ShowAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ping 実行ログの保存先フォルダを選択
+    /// </summary>
+    private async void OnBrowseLogFolderClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var folderPicker = new Windows.Storage.Pickers.FolderPicker
+            {
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary
+            };
+            folderPicker.FileTypeFilter.Add("*");
+
+            var window = App.MainWindowInstance;
+            if (window != null)
+            {
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
+            }
+
+            var folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                ViewModel.LogDirectory = folder.Path;
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ContentDialog
+            {
+                XamlRoot = this.XamlRoot,
+                Title = "Error",
+                Content = ex.Message,
+                CloseButtonText = ViewModel.Loc.GetString("Dialog_Close")
+            };
+            await errorDialog.ShowAsync();
+        }
+    }
+
+    /// <summary>
+    /// Ping 実行ログの保存先フォルダをエクスプローラーで開く
+    /// </summary>
+    private async void OnOpenLogFolderClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dir = ViewModel.GetResolvedLogDirectory();
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = dir,
+                UseShellExecute = true
+            });
         }
         catch (Exception ex)
         {

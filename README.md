@@ -29,21 +29,26 @@ C#、.NET 10、および WinUI 3 (Windows App SDK) で構築された、複数�
    - 最小応答時間 (Min RTT)、最大応答時間 (Max RTT)、平均応答時間 (Avg RTT)
    - 下部ステータスバーによる全体サマリー集計（稼働数、総送信、総損失率、全体平均RTT）
 
-4. **統計結果の CSV エクスポート**
-   - ワンクリックで全ホストの統計データを CSV ファイルとして保存
+4. **実行結果出力 (CSV)（統計結果のエクスポート）**
+   - ツールバーの「実行結果出力 (CSV)」ボタンから、全ホストの統計サマリーを CSV ファイルとして保存
    - Excel で直接開いた際の文字化けを防ぐ BOM 付き UTF-8 形式
 
-5. **テーマ対応 (ライト / ダークモード)**
+5. **Ping 実行ログの CSV 記録**
+   - Ping を 1 回実行するごとに `実行時間,宛先,応答時間(ms),TTL` を 1 行として日別 CSV ファイル（`WoodStreamPinger_Log_yyyyMMdd.csv`、BOM 付き UTF-8）へ自動追記
+   - 設定メニューおよびパラメータ欄からログ記録の ON/OFF、保存先フォルダの変更（既定: `ドキュメント\WoodStreamPinger\Logs`）、保存先フォルダを開く操作が可能
+   - ログ記録が有効な間は下部ステータスバーに「ログ記録中」バッジを表示
+
+6. **テーマ対応 (ライト / ダークモード)**
    - Windows OS のシステムテーマ設定変更を自動検知して連動
    - アプリ内から「システムに従う」「ライト」「ダーク」を手動即時切り替え可能
 
-6. **多言語対応 (日本語 / 英語)**
+7. **多言語対応 (日本語 / 英語)**
    - Windows の表示言語モード（UI Culture）を自動検知して初期選択
    - アプリ内から「自動」「日本語」「英語」を即時切り替え可能
 
-7. **状態の自動復元**
+8. **状態の自動復元**
    - 終了時のウィンドウ位置、サイズ、最大化状態を次回起動時に正確に復元
-   - 登録ホストリストや Ping パラメータを `AppData\Local\WoodStreamPinger\settings.json` に安全に永続化
+   - 登録ホストリスト、Ping パラメータ、ログ記録設定を `AppData\Local\WoodStreamPinger\settings.json` に安全に永続化
 
 ---
 
@@ -68,11 +73,15 @@ dotnet run
 ```
 
 ### スタンドアロンインストーラ (.exe) の作成
-実行環境アーキテクチャ（x64 等）に合わせた自己完結型（Self-Contained）のインストーラを作成します。
+実行環境アーキテクチャ（`x64`、`arm64`、または両方 `all`）に合わせた自己完結型（Self-Contained）のインストーラを作成します。
 ```powershell
-pwsh -File .\build-installer.ps1 -Architecture x64
+# x64 と arm64 の両方を作成
+powershell -ExecutionPolicy Bypass -File .\build-installer.ps1 -Architecture all
+
+# 特定アーキテクチャのみ作成 (x64 または arm64)
+powershell -ExecutionPolicy Bypass -File .\build-installer.ps1 -Architecture x64
 ```
-生成されたインストーラは `.\Installer` フォルダに出力されます（例: `WoodStreamPinger_Setup_v1.0.0.0_x64.exe`）。
+生成されたインストーラは `.\Installer` フォルダに出力されます（例: `WoodStreamPinger_Setup_v1.0.0.2_x64.exe`、`WoodStreamPinger_Setup_v1.0.0.2_arm64.exe`）。
 
 ---
 

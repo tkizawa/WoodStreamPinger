@@ -35,7 +35,7 @@ public sealed class LocalizationService : ILocalizationService
         // タイトル・ヘッダー
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "マルチホスト並行 Ping & リアルタイムネットワーク統計ツール",
-        ["App_Version"] = "Version 1.0.0.1",
+        ["App_Version"] = "Version 1.0.0.2",
 
         // ツールバー
         ["Toolbar_StartAll"] = "すべて開始",
@@ -50,6 +50,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Export_Success_Title"] = "エクスポート完了",
         ["Export_Success_Message"] = "統計結果をCSVファイルに出力しました:\n{0}",
         ["Export_NoData"] = "出力対象のホストがありません。",
+
+        // Ping 実行ログ (CSV)
+        ["Log_CsvHeader"] = "実行時間,宛先,応答時間(ms),TTL",
+        ["Log_Enable"] = "Ping実行ログを記録 (CSV)",
+        ["Log_Folder"] = "ログ保存先フォルダ:",
+        ["Log_Browse"] = "参照...",
+        ["Log_OpenFolder"] = "フォルダを開く",
+        ["Log_RecordingBadge"] = "ログ記録中",
 
         // パラメータ
         ["Param_Title"] = "Ping パラメータ設定",
@@ -122,7 +130,7 @@ public sealed class LocalizationService : ILocalizationService
         // Title & Header
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "Multi-Host Concurrent Ping & Real-Time Network Statistics Tool",
-        ["App_Version"] = "Version 1.0.0.1",
+        ["App_Version"] = "Version 1.0.0.2",
 
         // Toolbar
         ["Toolbar_StartAll"] = "Start All",
@@ -137,6 +145,14 @@ public sealed class LocalizationService : ILocalizationService
         ["Export_Success_Title"] = "Export Completed",
         ["Export_Success_Message"] = "Statistics exported to CSV file:\n{0}",
         ["Export_NoData"] = "No hosts to export.",
+
+        // Ping Execution Log (CSV)
+        ["Log_CsvHeader"] = "Timestamp,Destination,Response Time (ms),TTL",
+        ["Log_Enable"] = "Record Ping Log (CSV)",
+        ["Log_Folder"] = "Log Folder:",
+        ["Log_Browse"] = "Browse...",
+        ["Log_OpenFolder"] = "Open Folder",
+        ["Log_RecordingBadge"] = "Logging",
 
         // Parameters
         ["Param_Title"] = "Ping Parameters",
