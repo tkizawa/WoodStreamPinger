@@ -35,7 +35,7 @@ public sealed class LocalizationService : ILocalizationService
         // タイトル・ヘッダー
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "マルチホスト並行 Ping & リアルタイムネットワーク統計ツール",
-        ["App_Version"] = "Version 1.0.0.2",
+        ["App_Version"] = "Version 1.0.1.0",
 
         // ツールバー
         ["Toolbar_StartAll"] = "すべて開始",
@@ -122,7 +122,17 @@ public sealed class LocalizationService : ILocalizationService
         ["Status_Success"] = "応答あり",
         ["Status_Timeout"] = "タイムアウト",
         ["Status_Unreachable"] = "到達不能",
-        ["Status_Error"] = "エラー"
+        ["Status_Error"] = "エラー",
+
+        // ドーナツグラフ
+        ["Toolbar_ToggleChart"] = "グラフ",
+        ["Chart_Title"] = "Ping 状況",
+        ["Chart_Overall"] = "全体",
+        ["Chart_SelectedHost"] = "選択中のホスト",
+        ["Chart_NoHostSelected"] = "一覧からホストを選択すると\n個別の状況を表示します",
+        ["Chart_OkLabel"] = "OK (成功)",
+        ["Chart_NgLabel"] = "NG (失敗)",
+        ["Chart_TotalFormat"] = "合計: {0}"
     };
 
     private readonly Dictionary<string, string> _enStrings = new(StringComparer.OrdinalIgnoreCase)
@@ -130,7 +140,7 @@ public sealed class LocalizationService : ILocalizationService
         // Title & Header
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "Multi-Host Concurrent Ping & Real-Time Network Statistics Tool",
-        ["App_Version"] = "Version 1.0.0.2",
+        ["App_Version"] = "Version 1.0.1.0",
 
         // Toolbar
         ["Toolbar_StartAll"] = "Start All",
@@ -217,7 +227,17 @@ public sealed class LocalizationService : ILocalizationService
         ["Status_Success"] = "Reply Received",
         ["Status_Timeout"] = "Timed Out",
         ["Status_Unreachable"] = "Unreachable",
-        ["Status_Error"] = "Error"
+        ["Status_Error"] = "Error",
+
+        // Donut Chart
+        ["Toolbar_ToggleChart"] = "Chart",
+        ["Chart_Title"] = "Ping Status",
+        ["Chart_Overall"] = "Overall",
+        ["Chart_SelectedHost"] = "Selected Host",
+        ["Chart_NoHostSelected"] = "Select a host from the list\nto view its status",
+        ["Chart_OkLabel"] = "OK (Success)",
+        ["Chart_NgLabel"] = "NG (Failed)",
+        ["Chart_TotalFormat"] = "Total: {0}"
     };
 
     public LocalizationService()

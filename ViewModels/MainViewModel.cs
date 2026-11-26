@@ -38,6 +38,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial HostPingTarget? SelectedTarget { get; set; }
 
+    /// <summary>
+    /// ドーナツ円グラフパネルの表示状態
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsChartPanelVisible { get; set; } = true;
+
+    /// <summary>
+    /// ホストが選択されているかどうか
+    /// </summary>
+    public bool HasSelectedTarget => SelectedTarget != null;
+
+    /// <summary>
+    /// ホストが未選択かどうか
+    /// </summary>
+    public bool HasNoSelectedTarget => SelectedTarget == null;
+
+    partial void OnSelectedTargetChanged(HostPingTarget? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedTarget));
+        OnPropertyChanged(nameof(HasNoSelectedTarget));
+    }
+
     [ObservableProperty]
     public partial string SearchText { get; set; } = string.Empty;
 

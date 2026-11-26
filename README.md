@@ -81,7 +81,7 @@ powershell -ExecutionPolicy Bypass -File .\build-installer.ps1 -Architecture all
 # 特定アーキテクチャのみ作成 (x64 または arm64)
 powershell -ExecutionPolicy Bypass -File .\build-installer.ps1 -Architecture x64
 ```
-生成されたインストーラは `.\Installer` フォルダに出力されます（例: `WoodStreamPinger_Setup_v1.0.0.2_x64.exe`、`WoodStreamPinger_Setup_v1.0.0.2_arm64.exe`）。
+生成されたインストーラは `.\Installer` フォルダに出力されます（例: `WoodStreamPinger_Setup_v1.0.1.0_x64.exe`、`WoodStreamPinger_Setup_v1.0.1.0_arm64.exe`）。
 
 ---
 

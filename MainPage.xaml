@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:WoodStreamPinger.Models"
+    xmlns:controls="using:WoodStreamPinger.Controls"
     mc:Ignorable="d">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -94,6 +95,14 @@
                             <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Toolbar_ExportCsv'), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
+
+                    <!-- ドーナツグラフ表示切替 -->
+                    <ToggleButton IsChecked="{x:Bind ViewModel.IsChartPanelVisible, Mode=TwoWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE9D2;" FontSize="14" />
+                            <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Toolbar_ToggleChart'), Mode=OneWay}" />
+                        </StackPanel>
+                    </ToggleButton>
                 </StackPanel>
 
                 <!-- 右側: 設定ボタン (展開メニュー) -->
@@ -236,11 +245,18 @@
             </Grid>
         </Expander>
 
-        <!-- ==================== 2: メイン一覧 (テーブル) ==================== -->
-        <Border Grid.Row="2" Margin="16,4,16,8"
-                Background="{ThemeResource LayerFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1" CornerRadius="8">
+        <!-- ==================== 2: メイン一覧 (テーブル) & ドーナツグラフパネル ==================== -->
+        <Grid Grid.Row="2" Margin="16,4,16,8" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 左側: ホスト一覧テーブル -->
+            <Border Grid.Column="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="8">
             <Grid>
                 <Grid.RowDefinitions>
                     <!-- テーブルヘッダー -->
@@ -398,7 +414,154 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </Grid>
-        </Border>
+            </Border>
+
+            <!-- 右側: Ping 状況ドーナツ円グラフパネル -->
+            <Border Grid.Column="1"
+                    Width="252"
+                    Visibility="{x:Bind ViewModel.IsChartPanelVisible, Mode=OneWay}"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- パネルヘッダー -->
+                    <Border Grid.Row="0"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="14,8"
+                            CornerRadius="8,8,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE9D2;" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Chart_Title'), Mode=OneWay}"
+                                       FontWeight="SemiBold" FontSize="12" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- グラフコンテンツ -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,12">
+                        <StackPanel Spacing="14">
+
+                            <!-- 全体サマリー ドーナツグラフ -->
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Chart_Overall'), Mode=OneWay}"
+                                           FontWeight="SemiBold" FontSize="13"
+                                           HorizontalAlignment="Center" />
+
+                                <controls:DonutChartControl
+                                    OkCount="{x:Bind ViewModel.TotalReceived, Mode=OneWay}"
+                                    NgCount="{x:Bind ViewModel.TotalLost, Mode=OneWay}"
+                                    TotalLabelFormat="{x:Bind ViewModel.Loc.GetString('Chart_TotalFormat'), Mode=OneWay}"
+                                    ChartSize="144"
+                                    RingThickness="18" />
+
+                                <!-- 全体の凡例 (青: OK / 赤: NG) -->
+                                <Grid ColumnSpacing="8" Padding="6,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="6" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Ellipse Grid.Row="0" Grid.Column="0" Width="10" Height="10" Fill="#0D6EFD" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                               Text="{x:Bind ViewModel.Loc.GetString('Chart_OkLabel'), Mode=OneWay}"
+                                               FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="2"
+                                               Text="{x:Bind ViewModel.TotalReceived, Mode=OneWay}"
+                                               FontSize="13" FontWeight="SemiBold" Foreground="#0D6EFD" VerticalAlignment="Center" />
+
+                                    <Ellipse Grid.Row="2" Grid.Column="0" Width="10" Height="10" Fill="#DC3545" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                               Text="{x:Bind ViewModel.Loc.GetString('Chart_NgLabel'), Mode=OneWay}"
+                                               FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="2" Grid.Column="2"
+                                               Text="{x:Bind ViewModel.TotalLost, Mode=OneWay}"
+                                               FontSize="13" FontWeight="SemiBold" Foreground="#DC3545" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- 区切り線 -->
+                            <Border Height="1" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                            <!-- 選択中ホスト ドーナツグラフ -->
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Chart_SelectedHost'), Mode=OneWay}"
+                                           FontWeight="SemiBold" FontSize="13"
+                                           HorizontalAlignment="Center" />
+
+                                <!-- 未選択時の案内 -->
+                                <TextBlock Text="{x:Bind ViewModel.Loc.GetString('Chart_NoHostSelected'), Mode=OneWay}"
+                                           Visibility="{x:Bind ViewModel.HasNoSelectedTarget, Mode=OneWay}"
+                                           FontSize="11"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Margin="0,8,0,4" />
+
+                                <!-- 選択中ホストのグラフと凡例 -->
+                                <StackPanel Spacing="8"
+                                            Visibility="{x:Bind ViewModel.HasSelectedTarget, Mode=OneWay}">
+                                    <TextBlock Text="{x:Bind ViewModel.SelectedTarget.Host, Mode=OneWay, FallbackValue='', TargetNullValue=''}"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               HorizontalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+
+                                    <controls:DonutChartControl
+                                        OkCount="{x:Bind ViewModel.SelectedTarget.ReceivedCount, Mode=OneWay, FallbackValue=0}"
+                                        NgCount="{x:Bind ViewModel.SelectedTarget.LostCount, Mode=OneWay, FallbackValue=0}"
+                                        TotalLabelFormat="{x:Bind ViewModel.Loc.GetString('Chart_TotalFormat'), Mode=OneWay}"
+                                        ChartSize="128"
+                                        RingThickness="16" />
+
+                                    <Grid ColumnSpacing="8" Padding="6,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="6" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <Ellipse Grid.Row="0" Grid.Column="0" Width="10" Height="10" Fill="#0D6EFD" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{x:Bind ViewModel.Loc.GetString('Chart_OkLabel'), Mode=OneWay}"
+                                                   FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="0" Grid.Column="2"
+                                                   Text="{x:Bind ViewModel.SelectedTarget.ReceivedCount, Mode=OneWay, FallbackValue=0, TargetNullValue=0}"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="#0D6EFD" VerticalAlignment="Center" />
+
+                                        <Ellipse Grid.Row="2" Grid.Column="0" Width="10" Height="10" Fill="#DC3545" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                                   Text="{x:Bind ViewModel.Loc.GetString('Chart_NgLabel'), Mode=OneWay}"
+                                                   FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="2" Grid.Column="2"
+                                                   Text="{x:Bind ViewModel.SelectedTarget.LostCount, Mode=OneWay, FallbackValue=0, TargetNullValue=0}"
+                                                   FontSize="13" FontWeight="SemiBold" Foreground="#DC3545" VerticalAlignment="Center" />
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- ==================== 3: 下部サマリーステータスバー ==================== -->
         <Border Grid.Row="3"

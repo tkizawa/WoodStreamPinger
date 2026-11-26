@@ -5,7 +5,7 @@
 #define MyAppExeName "WoodStreamPinger.exe"
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.0.2"
+  #define MyAppVersion "1.0.1.0"
 #endif
 
 #ifndef MyAppArch

@@ -1,0 +1,66 @@
+<UserControl
+    x:Class="WoodStreamPinger.Controls.DonutChartControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center"
+          Width="{x:Bind ChartSize, Mode=OneWay}"
+          Height="{x:Bind ChartSize, Mode=OneWay}">
+
+        <!-- データなし時の背景トラックリング -->
+        <Ellipse x:Name="TrackEllipse"
+                 Width="{x:Bind ChartSize, Mode=OneWay}"
+                 Height="{x:Bind ChartSize, Mode=OneWay}"
+                 Stroke="{ThemeResource ControlStrokeColorDefaultBrush}"
+                 StrokeThickness="{x:Bind RingThickness, Mode=OneWay}" />
+
+        <!-- OK 100% 時のフルリング (青) -->
+        <Ellipse x:Name="OkFullEllipse"
+                 Width="{x:Bind ChartSize, Mode=OneWay}"
+                 Height="{x:Bind ChartSize, Mode=OneWay}"
+                 Stroke="#0D6EFD"
+                 StrokeThickness="{x:Bind RingThickness, Mode=OneWay}"
+                 Visibility="Collapsed" />
+
+        <!-- NG 100% 時のフルリング (赤) -->
+        <Ellipse x:Name="NgFullEllipse"
+                 Width="{x:Bind ChartSize, Mode=OneWay}"
+                 Height="{x:Bind ChartSize, Mode=OneWay}"
+                 Stroke="#DC3545"
+                 StrokeThickness="{x:Bind RingThickness, Mode=OneWay}"
+                 Visibility="Collapsed" />
+
+        <!-- OK セグメントの弧 (青) -->
+        <Path x:Name="OkArcPath"
+              Stroke="#0D6EFD"
+              StrokeThickness="{x:Bind RingThickness, Mode=OneWay}"
+              StrokeStartLineCap="Flat"
+              StrokeEndLineCap="Flat"
+              Visibility="Collapsed" />
+
+        <!-- NG セグメントの弧 (赤) -->
+        <Path x:Name="NgArcPath"
+              Stroke="#DC3545"
+              StrokeThickness="{x:Bind RingThickness, Mode=OneWay}"
+              StrokeStartLineCap="Flat"
+              StrokeEndLineCap="Flat"
+              Visibility="Collapsed" />
+
+        <!-- 中央のサマリー表示 (成功率と合計回数) -->
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+            <TextBlock x:Name="CenterPercentText"
+                       Text="--%"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="CenterSubText"
+                       Text="0"
+                       FontSize="11"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>
