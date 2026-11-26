@@ -35,14 +35,14 @@ public sealed class LocalizationService : ILocalizationService
         // タイトル・ヘッダー
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "マルチホスト並行 Ping & リアルタイムネットワーク統計ツール",
-        ["App_Version"] = "Version 1.0.0.0",
+        ["App_Version"] = "Version 1.0.0.1",
 
         // ツールバー
         ["Toolbar_StartAll"] = "すべて開始",
         ["Toolbar_StopAll"] = "すべて停止",
         ["Toolbar_ResetStats"] = "統計リセット",
         ["Toolbar_AddHost"] = "ホスト追加",
-        ["Toolbar_ExportCsv"] = "CSV出力",
+        ["Toolbar_ExportCsv"] = "実行結果出力 (CSV)",
         ["Toolbar_Settings"] = "設定",
         ["Toolbar_SearchPlaceholder"] = "ホスト名またはIPで絞り込み...",
 
@@ -122,14 +122,14 @@ public sealed class LocalizationService : ILocalizationService
         // Title & Header
         ["App_Title"] = "WoodStream Pinger",
         ["App_Subtitle"] = "Multi-Host Concurrent Ping & Real-Time Network Statistics Tool",
-        ["App_Version"] = "Version 1.0.0.0",
+        ["App_Version"] = "Version 1.0.0.1",
 
         // Toolbar
         ["Toolbar_StartAll"] = "Start All",
         ["Toolbar_StopAll"] = "Stop All",
         ["Toolbar_ResetStats"] = "Reset Stats",
         ["Toolbar_AddHost"] = "Add Hosts",
-        ["Toolbar_ExportCsv"] = "Export CSV",
+        ["Toolbar_ExportCsv"] = "Export Results (CSV)",
         ["Toolbar_Settings"] = "Settings",
         ["Toolbar_SearchPlaceholder"] = "Filter by host or IP...",
 
