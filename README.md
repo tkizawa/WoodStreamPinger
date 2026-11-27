@@ -91,4 +91,5 @@ powershell -ExecutionPolicy Bypass -File .\build-installer.ps1 -Architecture x64
 
 ## ライセンス
 
-本ソフトウェアは MIT ライセンスのもとで公開されています。
+本ソフトウェアは MIT ライセンスのもとで公開されています。詳細は [LICENSE](LICENSE) をご覧ください。
+同梱しているサードパーティ製ライブラリのライセンス表記については [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) をご覧ください。
